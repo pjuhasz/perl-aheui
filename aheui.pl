@@ -145,11 +145,11 @@ my %cmd = (
 	ᄇ => sub {
 				my $v;
 				if (ord $_[0] == ord $io_int) {
-					$v = <>;
+					$v = <STDIN>;
 					chomp $v;
 				}
 				elsif (ord $_[0] == ord $io_uc) {
-					$v = <>;
+					$v = <STDIN>;
 					chomp $v;
 					$v = ord substr $v, 0, 1;
 				}
