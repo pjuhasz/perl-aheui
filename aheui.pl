@@ -1,5 +1,53 @@
 #!/usr/bin/perl
 
+=pod
+
+=head1 NAME
+
+aheui.pl - Perl interpreter for Aheui
+
+=head1 DESCRIPTION
+
+This is a pure Perl interpreter for the esoteric programming language Aheui.
+More information about this language, including a semi-formal spec, 
+can be found at the following locations:
+
+	http://esolangs.org/wiki/Aheui
+	
+	https://github.com/aheui
+
+This implementation is notable because it showcases many of the 
+Unicode-related features of Perl.
+
+=over
+
+=item *
+
+Literal Hangul characters as hash keys - no magic array indexes
+
+=item *
+
+Determining whether a character is a Hangul syllable by 
+Unicode property - no hardcoded code points
+
+=item *
+
+Decomposing Hangul syllable to component letters by the 
+Unicode::Normalize core module - no magic numbers and reimplemented algorithm
+
+=back
+
+=head1 USAGE
+
+ [path/to/perl] aheui.pl [--debug] [--help] input.aheui
+
+=head1 OPTIONS
+
+	-d|--debug	Print debug information after each instruction
+	-h|--help	Print help and exit
+
+=cut
+
 use strict;
 use warnings;
 use Unicode::Normalize 'decompose';
