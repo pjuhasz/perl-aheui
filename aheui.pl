@@ -43,8 +43,9 @@ Unicode::Normalize core module - no magic numbers and reimplemented algorithm
 
 =head1 OPTIONS
 
-	-d|--debug	Print debug information after each instruction
-	-h|--help	Print help and exit
+	-l|--limit <n>	Limit number of instructions 
+	-d|--debug		Print debug information after each instruction
+	-h|--help		Print help and exit
 
 =cut
 
@@ -65,7 +66,9 @@ $| = 1;
 
 my $debug = 0;
 my $help  = 0;
+my $limit = undef;
 GetOptions(
+	'limit=i'  => \$limit,
 	'debug!' => \$debug,
 	'help!'  => \$help,
 ) or pod2usage(-verbose => 0);
@@ -85,6 +88,9 @@ my $sp = "";
 
 # program is running, i.e. not yet terminated
 my $running = 1;
+
+# number of instructions executed
+my $ic = 0;
 
 # vowel specifies direction of next move
 my %dir = (
@@ -308,6 +314,10 @@ while ($running) {
 	# wrap around
 	$cx %= $maxx;
 	$cy %= $maxy;
+	
+	# exit if over instruction limit
+	$ic++;
+	$running = 0 if defined $limit and $ic > $limit;
 }
 
 exit(popsp()) if scalar @{$stacks{$sp}};
