@@ -51,6 +51,7 @@ Unicode::Normalize core module - no magic numbers and reimplemented algorithm
 
 use strict;
 use warnings;
+use 5.014; # for pop/push/unshift/shift array_ref
 use Unicode::Normalize 'decompose';
 use utf8;
 use integer;
@@ -216,7 +217,7 @@ my %cmd = (
 		 	  },
 	ᄈ => sub {
 				if (ord $sp == ord $io_int) {
-					unshift @{$stacks{$sp}}, $stacks{$sp}[0];
+					unshift $stacks{$sp}, $stacks{$sp}[0];
 				} else {
 					my $v = popsp();
 					pushsp($v);
@@ -237,7 +238,7 @@ my %cmd = (
 				}
 			  },
 	ᄉ => sub { $sp = shift; },
-	ᄊ => sub { push @{$stacks{$_[0]}}, popsp();},
+	ᄊ => sub { push $stacks{$_[0]}, popsp();},
 	ᄌ => sub {
 				my $x = popsp();
 				my $y = popsp();
@@ -354,12 +355,12 @@ sub binop {
 # utility functions to push/pop from/to selected stack
 sub popsp {
 	return 0 if ord $sp == ord $io_uc;  # unimplemented extension
-	return shift @{$stacks{$sp}} if ord $sp == ord $io_int; # queue
-	return pop @{$stacks{$sp}}; # stack
+	return shift $stacks{$sp} if ord $sp == ord $io_int; # queue
+	pop $stacks{$sp}; # stack
 }
 
 sub pushsp ($) {
-	push @{$stacks{$sp}}, 0 if ord $sp == ord $io_uc; # unimplemented extension
-	push @{$stacks{$sp}}, $_[0];
+	push $stacks{$sp}, 0 if ord $sp == ord $io_uc; # unimplemented extension
+	push $stacks{$sp}, $_[0];
 }
 
