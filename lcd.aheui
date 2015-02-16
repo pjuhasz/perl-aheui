@@ -1,0 +1,22 @@
+방방뿌퍼서싸선
+뭉퍼차빠아싼로
+희
+
+input
+input
+:label
+dup
+decide end
+dup
+transfer t
+mod
+select t
+transfer none
+select none
+swap
+goto label
+:end
+swap
+print 
+exit
+
