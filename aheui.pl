@@ -276,8 +276,6 @@ for (@field) {
 # main loop, execute commands one by one, 
 # moving between steps in the specified direction
 while ($running) {
-	#check_pos(\@field, $cx, $cy);
-
 	# check if character is Hangul syllable
 	if ($field[$cy][$cx] =~ /\p{Block: Hangul_Syllables}/) {
 
@@ -322,20 +320,6 @@ while ($running) {
 }
 
 exit(popsp()) if scalar @{$stacks{$sp}};
-
-# check validity of position, exit with error message if not valid
-sub check_pos {
-	my ($f, $x, $y) = @_;
-	
-	die "Position $x, $y outside field"
-		if $x < 0
-		|| $y < 0
-		|| $y > $#$f
-		|| $x > $#{$f->[$y]};
-	
-	die "No character found at position $x, $y" 
-		unless defined $f->[$y][$x];	
-}
 
 # generic binary arithmetic operation
 sub binop {
