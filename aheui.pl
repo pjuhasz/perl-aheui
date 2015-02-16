@@ -1,7 +1,5 @@
 #!/usr/bin/perl
 
-# TODO open file, debug stdin
-
 use strict;
 use warnings;
 use Unicode::Normalize 'decompose';
@@ -9,6 +7,7 @@ use utf8;
 use integer;
 #use Data::Dumper;
 use Getopt::Long;
+use Pod::Usage;
 
 # STDIN and STDOUT in UTF-8
 use open qw/:std :utf8/;
@@ -17,7 +16,15 @@ use open qw/:std :utf8/;
 $| = 1;
 
 my $debug = 0;
-GetOptions ('debug!' => \$debug);
+my $help  = 0;
+GetOptions(
+	'debug!' => \$debug,
+	'help!'  => \$help,
+) or pod2usage(-verbose => 0);
+
+pod2usage(-verbose => 1) if $help;
+
+pod2usage(-verbose => 0) unless @ARGV;
 
 # cursor position, program execution starts at top left
 my ($cx, $cy) = (0, 0);
@@ -193,14 +200,17 @@ my %cmd = (
 );
 
 # read 2D Aheui code into AoA
+open(my $FH, "<:encoding(UTF-8)", $ARGV[0]) or die "Can't open input file $ARGV[0]\n";
 my @field;
 my ($maxx, $maxy) = (0, 0);
-while (<>) {
+while (<$FH>) {
 	chomp;
 	my @l = split //;
 	$maxx = $maxx > @l ? $maxx : scalar @l;
 	push @field, [@l];
 }
+close $FH;
+
 # pad lines with trailing whitespace
 $maxy = scalar @field;
 for (@field) {
