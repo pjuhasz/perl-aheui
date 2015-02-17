@@ -143,7 +143,7 @@ my %literal = (
 
 # trailing consonants specifying IO
 my $io_int = "ᆼ"; # as sp this selects the queue
-my $io_uc  = "ᇂ ";
+my $io_uc  = "ᇂ";
 
 # stacks as HoA's
 my %stacks;
@@ -190,20 +190,20 @@ my %cmd = (
 	ᄆ => sub {
 				my $v = popsp();
 				# perl bug? apparently it doesn't work with eq
-				if (ord $_[0] == ord $io_int) {
+				if ($_[0] eq $io_int) {
 					print $v;
 				}
-				elsif (ord $_[0] == ord $io_uc) {
+				elsif ($_[0] eq $io_uc) {
 					print chr $v;
 				}
 		 	  },
 	ᄇ => sub {
 				my $v;
-				if (ord $_[0] == ord $io_int) {
+				if ($_[0] eq $io_int) {
 					$v = <STDIN>;
 					chomp $v;
 				}
-				elsif (ord $_[0] == ord $io_uc) {
+				elsif ($_[0] eq $io_uc) {
 					$v = <STDIN>;
 					chomp $v;
 					$v = ord substr $v, 0, 1;
@@ -216,7 +216,7 @@ my %cmd = (
 				pushsp($v);
 		 	  },
 	ᄈ => sub {
-				if (ord $sp == ord $io_int) {
+				if ($sp eq $io_int) {
 					unshift $stacks{$sp}, $stacks{$sp}[0];
 				} else {
 					my $v = popsp();
@@ -225,7 +225,7 @@ my %cmd = (
 				}
 			  },
 	ᄑ => sub {
-				if (ord $sp == ord $io_int) {
+				if ($sp eq $io_int) {
 					my $x = $stacks{$sp}[0];
 					$stacks{$sp}[0] = $stacks{$sp}[1];
 					$stacks{$sp}[1] = $x;
@@ -334,13 +334,13 @@ exit(popsp()) if scalar @{$stacks{$sp}};
 
 # utility functions to push/pop from/to selected stack
 sub popsp {
-	return 0 if ord $sp == ord $io_uc;  # unimplemented extension
-	return shift $stacks{$sp} if ord $sp == ord $io_int; # queue
+	return 0 if $sp eq $io_uc;  # unimplemented extension
+	return shift $stacks{$sp} if $sp eq $io_int; # queue
 	pop $stacks{$sp}; # stack
 }
 
 sub pushsp ($) {
-	push $stacks{$sp}, 0 if ord $sp == ord $io_uc; # unimplemented extension
+	push $stacks{$sp}, 0 if $sp eq $io_uc; # unimplemented extension
 	push $stacks{$sp}, $_[0];
 }
 
