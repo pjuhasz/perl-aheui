@@ -150,6 +150,7 @@ my %stacks;
 for (keys %literal) {
 	$stacks{$_} = [];
 }
+my $storage = $stacks{$sp};
 
 # required number of elements on stack for given operation
 my %req = (
@@ -217,7 +218,7 @@ my %cmd = (
 		 	  },
 	ᄈ => sub {
 				if ($sp eq $io_int) {
-					unshift $stacks{$sp}, $stacks{$sp}[0];
+					unshift $storage, $storage->[0];
 				} else {
 					my $v = popsp();
 					pushsp($v);
@@ -226,9 +227,9 @@ my %cmd = (
 			  },
 	ᄑ => sub {
 				if ($sp eq $io_int) {
-					my $x = $stacks{$sp}[0];
-					$stacks{$sp}[0] = $stacks{$sp}[1];
-					$stacks{$sp}[1] = $x;
+					my $x = $storage->[0];
+					$storage->[0] = $storage->[1];
+					$storage->[1] = $x;
 				}
 				else {
 					my $x = popsp();
@@ -237,7 +238,7 @@ my %cmd = (
 					pushsp($y);
 				}
 			  },
-	ᄉ => sub { $sp = shift; },
+	ᄉ => sub { $sp = shift; $storage = $stacks{$sp};},
 	ᄊ => sub { push $stacks{$_[0]}, popsp();},
 	ᄌ => sub {
 				my $x = popsp();
@@ -296,7 +297,7 @@ while ($running) {
 		if ($debug) {
 			print "\t$cx $cy [$c->{c}]";
 			print " cmd[$cmd] dir[  $dir] arg[  $arg]($literal{$arg})";
-			print " sp[  $sp] ", join ",", @{$stacks{$sp}};
+			print " sp[  $sp] ", join ",", @$storage;
 			print "\n";
 		}
 
@@ -304,7 +305,7 @@ while ($running) {
 		$dir{$dir}->() if exists $dir{$dir};
 		
 		# execute command
-		if (@{$stacks{$sp}} >= $req{$cmd}) {
+		if (@$storage >= $req{$cmd}) {
 			$cmd{$cmd}->($arg);
 		}
 		else {
@@ -329,18 +330,18 @@ while ($running) {
 	$running = 0 if defined $limit and $ic > $limit;
 }
 
-exit(popsp()) if scalar @{$stacks{$sp}};
+exit(popsp()) if scalar @$storage;
 
 
 # utility functions to push/pop from/to selected stack
 sub popsp {
 	return 0 if $sp eq $io_uc;  # unimplemented extension
-	return shift $stacks{$sp} if $sp eq $io_int; # queue
-	pop $stacks{$sp}; # stack
+	return shift $storage if $sp eq $io_int; # queue
+	pop $storage; # stack
 }
 
 sub pushsp ($) {
-	push $stacks{$sp}, 0 if $sp eq $io_uc; # unimplemented extension
-	push $stacks{$sp}, $_[0];
+	push $storage, 0 if $sp eq $io_uc; # unimplemented extension
+	push $storage, $_[0];
 }
 
