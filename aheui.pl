@@ -262,7 +262,19 @@ while (<$FH>) {
 	chomp;
 	my @l = split //;
 	$maxx = $maxx > @l ? $maxx : scalar @l;
-	push @field, [@l];
+	push @field, [ 
+		map {
+			my ($valid, $cmd, $dir, $arg);
+			# check if character is Hangul syllable
+			if (/\p{Block: Hangul_Syllables}/) {
+				# get character and decompose it
+				($cmd, $dir, $arg) = split //, decompose($_);
+				$valid = 1;
+			}
+			# cache components
+			{valid => $valid, c => $_, cmd => $cmd, dir => $dir, arg => $arg};
+		} @l
+	];
 }
 close $FH;
 
@@ -276,15 +288,13 @@ for (@field) {
 # main loop, execute commands one by one, 
 # moving between steps in the specified direction
 while ($running) {
-	# check if character is Hangul syllable
-	if ($field[$cy][$cx] =~ /\p{Block: Hangul_Syllables}/) {
-
-		# get character and decompose it
-		my ($cmd, $dir, $arg) = split //, decompose($field[$cy][$cx]);
+	my $c = $field[$cy][$cx];
+	if ($c->{valid}) {
+		my ($cmd, $dir, $arg) = ($c->{cmd}, $c->{dir}, $c->{arg});
 		$arg //= ""; #empty string if no trailing consonant/
 		
 		if ($debug) {
-			print "\t$cx $cy [$field[$cy][$cx]]";
+			print "\t$cx $cy [$c->{c}]";
 			print " cmd[$cmd] dir[  $dir] arg[  $arg]($literal{$arg})";
 			print " sp[  $sp] ", join ",", @{$stacks{$sp}};
 			print "\n";
@@ -304,7 +314,7 @@ while ($running) {
 		}
 	}
 	elsif ($debug) {
-		print "\t$cx $cy [$field[$cy][$cx]]";
+		print "\t$cx $cy [$c->{c}]";
 		print "\n";
 	}
 	# move
