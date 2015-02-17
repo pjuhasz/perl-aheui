@@ -183,14 +183,13 @@ my %cmd = (
 	ᄁ => sub { }, # nop?
 	ᄍ => sub { }, # nop?
 	ᄏ => sub { }, # nop?
-	ᄃ => sub { my $x = popsp(); my $y = popsp(); pushsp($y+$x); },
-	ᄐ => sub { my $x = popsp(); my $y = popsp(); pushsp($y-$x); },
-	ᄄ => sub { my $x = popsp(); my $y = popsp(); pushsp($y*$x); },
-	ᄂ => sub { my $x = popsp(); my $y = popsp(); pushsp($x ? $y/$x : 0); },
-	ᄅ => sub { my $x = popsp(); my $y = popsp(); pushsp($x ? $y+$x : 0); },
+	ᄃ => sub { my $x = popsp(); pushsp(popsp() + $x); },
+	ᄐ => sub { my $x = popsp(); pushsp(popsp() - $x); },
+	ᄄ => sub { my $x = popsp(); pushsp(popsp() * $x); },
+	ᄂ => sub { my $x = popsp(); pushsp($x ? popsp() / $x : 0); },
+	ᄅ => sub { my $x = popsp(); pushsp($x ? popsp() % $x : 0); },
 	ᄆ => sub {
 				my $v = popsp();
-				# perl bug? apparently it doesn't work with eq
 				if ($_[0] eq $io_int) {
 					print $v;
 				}
@@ -220,7 +219,7 @@ my %cmd = (
 				if ($sp eq $io_int) {
 					unshift $storage, $storage->[0];
 				}
-				else if ($sp eq $io_uc) {
+				elsif ($sp eq $io_uc) {
 					# do nothing
 				}
 				else {
@@ -235,7 +234,7 @@ my %cmd = (
 					$storage->[0] = $storage->[1];
 					$storage->[1] = $x;
 				}
-				else if ($sp eq $io_uc) {
+				elsif ($sp eq $io_uc) {
 					# do nothing
 				}
 				else {
