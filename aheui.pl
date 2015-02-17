@@ -189,31 +189,36 @@ my %cmd = (
 	ᄂ => sub { my $x = popsp(); pushsp($x ? popsp() / $x : 0); },
 	ᄅ => sub { my $x = popsp(); pushsp($x ? popsp() % $x : 0); },
 	ᄆ => sub {
-				my $v = popsp();
-				if ($_[0] eq $io_int) {
-					print $v;
+				if ($_[1]) {
+					my $v = popsp();
+					if ($_[0] eq $io_int) {
+						print $v;
+					}
+					elsif ($_[0] eq $io_uc) {
+						print chr $v;
+					}
 				}
-				elsif ($_[0] eq $io_uc) {
-					print chr $v;
+				else {
+					popsp();
 				}
 		 	  },
 	ᄇ => sub {
-				my $v;
-				if ($_[0] eq $io_int) {
-					$v = <STDIN>;
-					chomp $v;
-				}
-				elsif ($_[0] eq $io_uc) {
-					$v = <STDIN>;
-					chomp $v;
-					$v = ord substr $v, 0, 1;
+				if ($_[1]) {
+					my $v;
+					if ($_[0] eq $io_int) {
+						$v = <STDIN>;
+						chomp $v;
+					}
+					elsif ($_[0] eq $io_uc) {
+						$v = <STDIN>;
+						chomp $v;
+						$v = ord substr $v, 0, 1;
+					}
+					pushsp($v);
 				}
 				else {
-					die "Invalid literal [  $_[0]] in push command" 
-						unless exists $literal{$_[0]};
-					$v = $literal{$_[0]};
+					pushsp($literal{$_[0]});
 				}
-				pushsp($v);
 		 	  },
 	ᄈ => sub {
 				if ($sp eq $io_int) {
@@ -271,15 +276,19 @@ while (<$FH>) {
 	$maxx = $maxx > @l ? $maxx : scalar @l;
 	push @field, [ 
 		map {
-			my ($valid, $cmd, $dir, $arg);
+			my ($valid, $cmd, $dir, $arg, $is_io);
 			# check if character is Hangul syllable
 			if (/\p{Block: Hangul_Syllables}/) {
 				# get character and decompose it
 				($cmd, $dir, $arg) = split //, decompose($_);
 				$valid = 1;
+				$arg //= ""; #empty string if no trailing consonant/
+				# dodgy optimization: check if arg is  
+				# (meaning an IO operation for push/pull) and save it
+				$is_io = ($arg eq $io_int or $arg eq $io_uc);
 			}
 			# cache components
-			{valid => $valid, c => $_, cmd => $cmd, dir => $dir, arg => $arg};
+			{valid => $valid, c => $_, cmd => $cmd, dir => $dir, arg => $arg, is_io => $is_io};
 		} @l
 	];
 }
@@ -289,7 +298,7 @@ close $FH;
 $maxy = scalar @field;
 for (@field) {
 	my $l = scalar @$_;
-	push @$_, (" ") x ($maxx - $l);
+	push @$_, ({valid => 0, c => " "}) x ($maxx - $l);
 }
 
 # main loop, execute commands one by one, 
@@ -298,11 +307,11 @@ while ($running) {
 	my $c = $field[$cy][$cx];
 	if ($c->{valid}) {
 		my ($cmd, $dir, $arg) = ($c->{cmd}, $c->{dir}, $c->{arg});
-		$arg //= ""; #empty string if no trailing consonant/
 		
 		if ($debug) {
 			print "\t$cx $cy [$c->{c}]";
-			print " cmd[$cmd] dir[  $dir] arg[  $arg]($literal{$arg})";
+			print " cmd[$cmd] dir[  $dir] arg[  $arg]" . 
+				($c->{is_io} ? " IO" : "($literal{$arg})");
 			print " sp[  $sp] ", join ",", @$storage;
 			print "\n";
 		}
@@ -312,7 +321,7 @@ while ($running) {
 		
 		# execute command
 		if (@$storage >= $req{$cmd}) {
-			$cmd{$cmd}->($arg);
+			$cmd{$cmd}->($arg, $c->{is_io});
 		}
 		else {
 			# contrary to the spec, but similarly to reference JS implementation
