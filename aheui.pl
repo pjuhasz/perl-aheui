@@ -182,11 +182,11 @@ my %cmd = (
 	ᄁ => sub { }, # nop?
 	ᄍ => sub { }, # nop?
 	ᄏ => sub { }, # nop?
-	ᄃ => sub { binop('+'); },
-	ᄐ => sub { binop('-'); },
-	ᄄ => sub { binop('*'); },
-	ᄂ => sub { binop('/'); },
-	ᄅ => sub { binop('%'); },
+	ᄃ => sub { my $x = popsp(); my $y = popsp(); pushsp($y+$x); },
+	ᄐ => sub { my $x = popsp(); my $y = popsp(); pushsp($y-$x); },
+	ᄄ => sub { my $x = popsp(); my $y = popsp(); pushsp($y*$x); },
+	ᄂ => sub { my $x = popsp(); my $y = popsp(); pushsp($x ? $y/$x : 0); },
+	ᄅ => sub { my $x = popsp(); my $y = popsp(); pushsp($x ? $y+$x : 0); },
 	ᄆ => sub {
 				my $v = popsp();
 				# perl bug? apparently it doesn't work with eq
@@ -321,20 +321,6 @@ while ($running) {
 
 exit(popsp()) if scalar @{$stacks{$sp}};
 
-# generic binary arithmetic operation
-sub binop {
-	my $op = shift;
-	
-	my $x = popsp();
-	my $y = popsp();
-	if ($x == 0 and ($op eq '/' or $op eq '%')) {
-		pushsp(0);	
-	}
-	else {
-		my $res = eval "$y $op $x";
-		pushsp($res);
-	}
-}
 
 # utility functions to push/pop from/to selected stack
 sub popsp {
