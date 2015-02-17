@@ -219,7 +219,11 @@ my %cmd = (
 	ᄈ => sub {
 				if ($sp eq $io_int) {
 					unshift $storage, $storage->[0];
-				} else {
+				}
+				else if ($sp eq $io_uc) {
+					# do nothing
+				}
+				else {
 					my $v = popsp();
 					pushsp($v);
 					pushsp($v);
@@ -230,6 +234,9 @@ my %cmd = (
 					my $x = $storage->[0];
 					$storage->[0] = $storage->[1];
 					$storage->[1] = $x;
+				}
+				else if ($sp eq $io_uc) {
+					# do nothing
 				}
 				else {
 					my $x = popsp();
