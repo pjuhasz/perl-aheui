@@ -151,6 +151,8 @@ for (keys %literal) {
 	$stacks{$_} = [];
 }
 my $storage = $stacks{$sp};
+my $sp_is_queue = $sp eq $io_int;
+my $sp_is_extension = $sp eq $io_uc;
 
 # required number of elements on stack for given operation
 my %req = (
@@ -221,10 +223,10 @@ my %cmd = (
 				}
 		 	  },
 	ᄈ => sub {
-				if ($sp eq $io_int) {
+				if ($sp_is_queue) {
 					unshift @$storage, $storage->[0];
 				}
-				elsif ($sp eq $io_uc) {
+				elsif ($sp_is_extension) {
 					# do nothing
 				}
 				else {
@@ -234,12 +236,12 @@ my %cmd = (
 				}
 			  },
 	ᄑ => sub {
-				if ($sp eq $io_int) {
+				if ($sp_is_queue) {
 					my $x = $storage->[0];
 					$storage->[0] = $storage->[1];
 					$storage->[1] = $x;
 				}
-				elsif ($sp eq $io_uc) {
+				elsif ($sp_is_extension) {
 					# do nothing
 				}
 				else {
@@ -249,8 +251,20 @@ my %cmd = (
 					pushsp($y);
 				}
 			  },
-	ᄉ => sub { $sp = shift; $storage = $stacks{$sp};},
-	ᄊ => sub { push @{$stacks{$_[0]}}, popsp();},
+	ᄉ => sub {
+				$sp = $_[0];
+				$storage = $stacks{$sp};
+				$sp_is_queue = $sp eq $io_int;
+				$sp_is_extension = $sp eq $io_uc;
+			  },
+	ᄊ => sub {
+				if ($sp_is_extension) {
+					popsp(); # unimplemented extension 
+				}
+				else {
+					push @{$stacks{$_[0]}}, popsp();
+				}
+			  },
 	ᄌ => sub {
 				my $x = popsp();
 				my $y = popsp();
@@ -350,13 +364,13 @@ exit(popsp()) if scalar @$storage;
 
 # utility functions to push/pop from/to selected stack
 sub popsp {
-	return 0 if $sp eq $io_uc;  # unimplemented extension
-	return shift @$storage if $sp eq $io_int; # queue
+	return 0 if $sp_is_extension;  # unimplemented extension
+	return shift @$storage if $sp_is_queue; # queue
 	pop @$storage; # stack
 }
 
 sub pushsp ($) {
-	push @$storage, 0 if $sp eq $io_uc; # unimplemented extension
-	push @$storage, $_[0];
+	# extension unimplemented
+	push @$storage, $_[0] unless $sp_is_extension;
 }
 
